@@ -36,6 +36,7 @@ class Block:
 		self.y = -600-(16.6+(row*11.6))
 		self.health = health
 		self.destroy = False
+		self.swap = False
 		self.collisionrectangle = pygame.Rect(togrid(self.column),togrid(self.row)+self.y,100,100)
 		self.allhealth = health
 
@@ -52,6 +53,9 @@ class Block:
 		self.y += speed
 		if self.y > height:
 			self.destroy = True
+		if togrid(self.row)+self.y >= height-64:
+			self.swap = True
+		
 		self.draw()
 		self.collisionrectangle = pygame.Rect(togrid(self.column),togrid(self.row)+self.y,100,100)
 
@@ -92,7 +96,7 @@ class Player:
 
 	def draw(self):
 		screen.blit(character_image,(self.pos.x,self.pos.y))
-		
+
 
 class Bullet:
 	def __init__(self,x,y,damage,speed):
@@ -175,15 +179,19 @@ def patterntocubelist(difficulty=1):
 	return ret
 
 
-def game():
+def game(player=Player(),difficulty=1,pos=0,speed=2,bulletspeed=10,bulletdamage=1,highscore = 0):
+	
+	highscore = highscore
 	global score 
 	score = 0
 
+	bulletspeed = bulletspeed
 	start = time.time()
 	clock = pygame.time.Clock()
-	player = Player()
-	difficulty = 1
-	pos,speed = 0,2
+	player = player
+	difficulty = difficulty
+	pos,speed = pos,speed
+	bulletdamage = bulletdamage
 
 	cubes = [[]for i in range(5)]
 	for n in range(5):
@@ -191,7 +199,7 @@ def game():
 
 	tick = 0
 	bullets = [[]for i in range(5)]
-
+	drawcubes = [[]for i in range(5)]
 	while True:
 		#uncomment this statement and for some reason the code will run faster at lower fps values (30 - 60fps). Without, a 60fps designed game will run at a lower framerate
 		#print("",end=" ")
@@ -210,21 +218,40 @@ def game():
 				if event.key == pygame.K_s:
 					cubes = patterntocubelist()
 
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				bullets[extcolumn(player.pos.x+32)].append(Bullet(player.pos.x+32,height-150,2,9))
-
 		mx = constrain(mx,0,width-44)
 		player.pos.x = mx
 				
 		if tick %3 == 0:
-			bullets[extcolumn(player.pos.x+32)].append(Bullet(player.pos.x+32,height-150,1,10))
+			bullets[extcolumn(player.pos.x+32)].append(Bullet(player.pos.x+32,height-150,bulletdamage,bulletspeed))
 
 		cubr = False
+
+
+
+
+
+
+
+
+
+
+
 		for m,row in enumerate(cubes):
 			for n,cube in enumerate(row):
 				if cube.destroy:
 					row.pop(n)
+				if cube.swap:
+					drawcubes[m].append(cubes[m].pop(n))
 				cube.update(speed)
+
+		for m,row in enumerate(drawcubes):
+			for n,cube in enumerate(row):
+				cube.update(speed)
+				if cube.destroy:
+					drawcubes[m].pop(n)
+
+		print(cubes,"\n",drawcubes)
+
 
 		for m,row in enumerate(bullets):
 			for n,bullet in enumerate(row):
@@ -272,40 +299,4 @@ def game():
 		clock.tick(90)
 
 game()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
